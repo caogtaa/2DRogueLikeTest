@@ -76,6 +76,12 @@ namespace MyGame
             //Check if we have a non-zero value for horizontal or vertical
             if (horizontal != 0 || vertical != 0)
             {
+                // if player facing and input is not same direction, change player direction
+                if (horizontal * this.transform.localScale.x < 0) {
+                    Vector3 localScale = this.transform.localScale;
+                    localScale.x = -localScale.x;
+                    this.transform.localScale = localScale;
+                }
                 //Call AttemptMove passing in the generic parameter Wall, since that is what Player may interact with if they encounter one (by attacking it)
                 //Pass in horizontal and vertical as parameters to specify the direction to move Player in.
                 AttemptMove<Wall>(horizontal, vertical);
