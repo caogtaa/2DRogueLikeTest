@@ -72,6 +72,7 @@
     <Compile Include="Assets\_MyGame\Scripts\BoardManager.cs" />
     <Compile Include="Assets\_MyGame\Scripts\Enemy.cs" />
     <Compile Include="Assets\_MyGame\Scripts\GameManager.cs" />
+    <Compile Include="Assets\_MyGame\Scripts\GTBaseMonoBehaviour.cs" />
     <Compile Include="Assets\_MyGame\Scripts\Loader.cs" />
     <Compile Include="Assets\_MyGame\Scripts\MoveObject.cs" />
     <Compile Include="Assets\_MyGame\Scripts\Player.cs" />

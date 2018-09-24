@@ -7,22 +7,35 @@ using UnityEngine.UI;                   //Allows us to use UI.
 
 namespace MyGame
 {
-    public class GameManager : MonoBehaviour
+    public class GameManager : GTBaseMonoBehaviour
     {
         public float levelStartDelay = 2f;                      //Time to wait before starting level, in seconds.
         public float turnDelay = 0.1f;                          //Delay between each Player turn.
         public int playerFoodPoints = 100;                      //Starting value for Player food points.
         public static GameManager instance = null;              //Static instance of GameManager which allows it to be accessed by any other script.
-        [HideInInspector] public bool playersTurn = true;       //Boolean to check if it's players turn, hidden in inspector but public.
+
+        private bool playersTurn = true;                        //Boolean to check if it's players turn
+        private bool playerMoving = false;
 
 
         private Text levelText;                                 //Text to display current level number.
         private GameObject levelImage;                          //Image to block out level as levels are being set up, background for levelText.
         private BoardManager boardScript;                       //Store a reference to our BoardManager which will set up the level.
         private int level = 1;                                  //Current level number, expressed in game as "Day 1".
+        private Player player;
         private List<Enemy> enemies;                          //List of all Enemy units, used to issue them move commands.
-        private bool enemiesMoving;                             //Boolean to check if enemies are moving.
+        private bool enemiesMoving = false;                             //Boolean to check if enemies are moving.
         private bool doingSetup = true;                         //Boolean to check if we're setting up board, prevent Player from moving during setup.
+
+        class InputMovingDir
+        {
+            public int horizontal;
+            public int vertical;
+
+            public bool isEmpty() {
+                return horizontal == 0 && vertical == 0;
+            }
+        };
 
 
 
@@ -90,6 +103,13 @@ namespace MyGame
             //Call the SetupScene function of the BoardManager script, pass it current level number.
             boardScript.SetupScene(level);
 
+            LocateUnits();
+        }
+
+        void LocateUnits()
+        {
+            player = GameObject.FindWithTag("Player").GetComponent<Player>();
+            // todo: locate enemies
         }
 
 
@@ -103,17 +123,62 @@ namespace MyGame
             doingSetup = false;
         }
 
+        private InputMovingDir DetectPlayerMovingDir()
+        {
+            InputMovingDir result = new InputMovingDir();
+            // int horizontal = 0;     //Used to store the horizontal move direction.
+            // int vertical = 0;       //Used to store the vertical move direction.
+
+            result.horizontal = (int)(Input.GetAxisRaw("Horizontal"));
+
+            //Get input from the input manager, round it to an integer and store in vertical to set y axis move direction
+            result.vertical = (int)(Input.GetAxisRaw("Vertical"));
+
+            //Check if moving horizontally, if so set vertical to zero.
+            if (result.horizontal != 0)
+                result.vertical = 0;
+
+            return result;
+        }
+
         //Update is called every frame.
         void Update()
         {
-            //Check that playersTurn or enemiesMoving or doingSetup are not currently true.
-            if (playersTurn || enemiesMoving || doingSetup)
-
-                //If any of these are true, return and do not start MoveEnemies.
+            if (doingSetup) {
                 return;
+            }
 
-            //Start moving enemies.
-            StartCoroutine(MoveEnemies());
+            if (playersTurn) {
+                if (playerMoving) {
+                    return;
+                }
+
+                InputMovingDir movingDir = DetectPlayerMovingDir();
+                if (!movingDir.isEmpty()) {
+                    playerMoving = true;
+                    Debug.Log("Player Moving Called");
+                    player.AttemptMoveWithCallback<Wall>(
+                        movingDir.horizontal,
+                        movingDir.vertical,() => {
+                            playerMoving = false;
+                        });
+
+                    // enable enemies action immediately
+                    playersTurn = false;
+                }
+            } else {
+                // ememy's turn
+                if (enemiesMoving) {
+                    return;
+                }
+
+                enemiesMoving = true;
+                StartCoroutine(CombineCoroutineWithCallback(
+                    MoveEnemies(), () => {
+                        enemiesMoving = false;
+                        playersTurn = true;
+                    }));
+            }
         }
 
         //Call this to add the passed in Enemy to the List of Enemy objects.
