@@ -56,14 +56,15 @@ namespace MyGame
                 this.transform.localScale = localScale;
             }
 
+            //Every time player moves, subtract from food points total.
+            GameManager.instance.UpdateFood(-1);
+
             //Call the AttemptMove method of the base class, passing in the component T (in this case Wall) and x and y direction to move.
             bool canMove = base.AttemptMoveWithCallback<T>(xDir, yDir, callback);
             if (canMove) {
                 SoundManager.instance.RandomizeSfx(moveSound1, moveSound2);
             }
 
-            //Every time player moves, subtract from food points total.
-            GameManager.instance.UpdateFood(-1);
             return canMove;
         }
 

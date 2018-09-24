@@ -205,7 +205,6 @@ namespace MyGame
                 InputMovingDir movingDir = DetectPlayerMovingDir();
                 if (!movingDir.isEmpty()) {
                     playerMoving = true;
-                    Debug.Log("Player Moving Called");
                     player.AttemptMoveWithCallback<Wall>(
                         movingDir.horizontal,
                         movingDir.vertical,() => {
@@ -285,6 +284,12 @@ namespace MyGame
 
         public void onPlayerEnterExit()
         {
+            if (playerFoodPoints <= 0)
+            {
+                // coner case that player starved and enter exit at same time.
+                // do not restart level
+                return;
+            }
             // to disable input
             doingSetup = true;
 
