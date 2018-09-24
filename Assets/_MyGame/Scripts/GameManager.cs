@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
-
+using UnityEngine.SceneManagement;      //Allows us to use SceneManager
 
 using System.Collections.Generic;       //Allows us to use Lists. 
 using UnityEngine.UI;                   //Allows us to use UI.
@@ -10,6 +10,8 @@ namespace MyGame
     public class GameManager : GTBaseMonoBehaviour
     {
         public float levelStartDelay = 2f;                      //Time to wait before starting level, in seconds.
+        public float restartLevelDelay = 1f;        //Delay time in seconds to restart level.
+
         public float turnDelay = 0.1f;                          //Delay between each Player turn.
         public int playerFoodPoints = 100;                      //Starting value for Player food points.
         public static GameManager instance = null;              //Static instance of GameManager which allows it to be accessed by any other script.
@@ -111,6 +113,7 @@ namespace MyGame
             LocateUnits();
 
             foodText = GameObject.Find("FoodText").GetComponent<Text>();
+            UpdateFoodText();
         }
 
         void LocateUnits()
@@ -278,6 +281,22 @@ namespace MyGame
 
             //Enemies are done moving, set enemiesMoving to false.
             enemiesMoving = false;
+        }
+
+        public void onPlayerEnterExit()
+        {
+            // to disable input
+            doingSetup = true;
+
+            //Invoke the Restart function to start the next level with a delay of restartLevelDelay (default 1 second).
+            Invoke("Restart", restartLevelDelay);
+        }
+
+        //Restart reloads the scene when called.
+        private void Restart()
+        {
+            //Load the last scene loaded, in this case Main, the only scene in the game.
+            SceneManager.LoadScene(0);
         }
     }
 }

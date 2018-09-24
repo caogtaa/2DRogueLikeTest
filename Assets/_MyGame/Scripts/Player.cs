@@ -1,6 +1,5 @@
 ﻿using UnityEngine;
 using System.Collections;
-using UnityEngine.SceneManagement;      //Allows us to use SceneManager
 using UnityEngine.UI;
 
 namespace MyGame
@@ -8,7 +7,6 @@ namespace MyGame
     //Player inherits from MovingObject, our base class for objects that can move, Enemy also inherits from this.
     public class Player : MovingObject
     {
-        public float restartLevelDelay = 1f;        //Delay time in seconds to restart level.
         public int pointsPerFood = 10;              //Number of points to add to player food points when picking up a food object.
         public int pointsPerSoda = 20;              //Number of points to add to player food points when picking up a soda object.
         public int wallDamage = 1;                  //How much damage a player does to a wall when chopping it.
@@ -90,11 +88,7 @@ namespace MyGame
             //Check if the tag of the trigger collided with is Exit.
             if (other.tag == "Exit")
             {
-                //Invoke the Restart function to start the next level with a delay of restartLevelDelay (default 1 second).
-                Invoke("Restart", restartLevelDelay);
-
-                //Disable the player object since level is over.
-                enabled = false;
+                GameManager.instance.onPlayerEnterExit();
             }
 
             //Check if the tag of the trigger collided with is Food.
@@ -119,15 +113,6 @@ namespace MyGame
                 SoundManager.instance.RandomizeSfx(drinkSound1, drinkSound2);
             }
         }
-
-
-        //Restart reloads the scene when called.
-        private void Restart()
-        {
-            //Load the last scene loaded, in this case Main, the only scene in the game.
-            SceneManager.LoadScene(0);
-        }
-
 
         //LoseFood is called when an enemy attacks the player.
         //It takes a parameter loss which specifies how many points to lose.
