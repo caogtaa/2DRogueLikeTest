@@ -14,9 +14,7 @@ namespace MyGame
         public int wallDamage = 1;                  //How much damage a player does to a wall when chopping it.
 
 
-        public Text foodText;                       //UI Text to display current player food total.
         private Animator animator;                  //Used to store a reference to the Player's animator component.
-        private int food;                           //Used to store player food points total during level.
 
         public AudioClip moveSound1;                //1 of 2 Audio clips to play when player moves.
         public AudioClip moveSound2;                //2 of 2 Audio clips to play when player moves.
@@ -24,18 +22,12 @@ namespace MyGame
         public AudioClip eatSound2;                 //2 of 2 Audio clips to play when player collects a food object.
         public AudioClip drinkSound1;               //1 of 2 Audio clips to play when player collects a soda object.
         public AudioClip drinkSound2;               //2 of 2 Audio clips to play when player collects a soda object.
-        public AudioClip gameOverSound;             //Audio clip to play when player dies.
 
         //Start overrides the Start function of MovingObject
         protected override void Start()
         {
             //Get a component reference to the Player's animator component
             animator = GetComponent<Animator>();
-            foodText = GameObject.Find("FoodText").GetComponent<Text>();
-
-            //Get the current food point total stored in GameManager.instance between levels.
-            food = GameManager.instance.playerFoodPoints;
-            UpdateFoodText();
 
             //Call the Start function of the MovingObject base class.
             base.Start();
@@ -45,26 +37,13 @@ namespace MyGame
         //This function is called when the behaviour becomes disabled or inactive.
         private void OnDisable()
         {
-            //When Player object is disabled, store the current local food total in the GameManager so it can be re-loaded in next level.
-            GameManager.instance.playerFoodPoints = food;
+            // called when reload scene
         }
 
 
         private void Update()
         {
             // GameManager will trigger Player's move
-        }
-
-        private void UpdateFoodText(int delta = 0)
-        {
-            if (delta != 0)
-            {
-                foodText.text = delta.ToString() + " Food: " + food;
-            }
-            else
-            {
-                foodText.text = "Food: " + food;
-            }
         }
 
         //AttemptMove overrides the AttemptMove function in the base class MovingObject
@@ -79,18 +58,14 @@ namespace MyGame
                 this.transform.localScale = localScale;
             }
 
-            //Every time player moves, subtract from food points total.
-            food--;
-            UpdateFoodText();
             //Call the AttemptMove method of the base class, passing in the component T (in this case Wall) and x and y direction to move.
             bool canMove = base.AttemptMoveWithCallback<T>(xDir, yDir, callback);
             if (canMove) {
                 SoundManager.instance.RandomizeSfx(moveSound1, moveSound2);
             }
 
-            //Since the player has moved and lost food points, check if the game has ended.
-            // todo: check it in GameManager in GameManager
-            CheckIfGameOver();
+            //Every time player moves, subtract from food points total.
+            GameManager.instance.UpdateFood(-1);
             return canMove;
         }
 
@@ -126,8 +101,8 @@ namespace MyGame
             else if (other.tag == "Food")
             {
                 //Add pointsPerFood to the players current food total.
-                food += pointsPerFood;
-                UpdateFoodText(pointsPerFood);
+                GameManager.instance.UpdateFood(pointsPerFood);
+
                 //Disable the food object the player collided with.
                 other.gameObject.SetActive(false);
                 SoundManager.instance.RandomizeSfx(eatSound1, eatSound2);
@@ -137,8 +112,7 @@ namespace MyGame
             else if (other.tag == "Soda")
             {
                 //Add pointsPerSoda to players food points total
-                food += pointsPerSoda;
-                UpdateFoodText(pointsPerFood);
+                GameManager.instance.UpdateFood(pointsPerSoda);
 
                 //Disable the soda object the player collided with.
                 other.gameObject.SetActive(false);
@@ -161,26 +135,8 @@ namespace MyGame
         {
             //Set the trigger for the player animator to transition to the playerHit animation.
             animator.SetTrigger("Hit");
-
-            //Subtract lost food points from the players total.
-            food -= loss;
-            UpdateFoodText(-loss);
-            //Check to see if game has ended.
-            CheckIfGameOver();
+            GameManager.instance.UpdateFood(-loss);
         }
 
-
-        //CheckIfGameOver checks if the player is out of food points and if so, ends the game.
-        private void CheckIfGameOver()
-        {
-            //Check if food point total is less than or equal to zero.
-            if (food <= 0)
-            {
-                SoundManager.instance.PlaySingle(gameOverSound);
-                SoundManager.instance.musicSource.Stop();
-                //Call the GameOver function of GameManager.
-                GameManager.instance.GameOver();
-            }
-        }
     }
 }

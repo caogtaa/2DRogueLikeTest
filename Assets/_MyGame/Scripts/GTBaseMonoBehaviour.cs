@@ -11,7 +11,8 @@ namespace MyGame
         public IEnumerator CombineCoroutineWithCallback(IEnumerator routine, CallbackDelegate callback)
         {
             yield return StartCoroutine(routine);
-            callback();
+            if (callback != null)
+                callback();
         }
     }
 }

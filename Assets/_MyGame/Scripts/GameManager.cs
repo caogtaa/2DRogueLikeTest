@@ -17,15 +17,20 @@ namespace MyGame
         private bool playersTurn = true;                        //Boolean to check if it's players turn
         private bool playerMoving = false;
 
+        private List<Enemy> enemies;                          //List of all Enemy units, used to issue them move commands.
+        private bool enemiesMoving = false;                             //Boolean to check if enemies are moving.
 
         private Text levelText;                                 //Text to display current level number.
         private GameObject levelImage;                          //Image to block out level as levels are being set up, background for levelText.
+
+        public Text foodText;                       //UI Text to display current player food total.
+
         private BoardManager boardScript;                       //Store a reference to our BoardManager which will set up the level.
         private int level = 1;                                  //Current level number, expressed in game as "Day 1".
         private Player player;
-        private List<Enemy> enemies;                          //List of all Enemy units, used to issue them move commands.
-        private bool enemiesMoving = false;                             //Boolean to check if enemies are moving.
         private bool doingSetup = true;                         //Boolean to check if we're setting up board, prevent Player from moving during setup.
+
+        public AudioClip gameOverSound;             //Audio clip to play when player dies.
 
         class InputMovingDir
         {
@@ -104,6 +109,8 @@ namespace MyGame
             boardScript.SetupScene(level);
 
             LocateUnits();
+
+            foodText = GameObject.Find("FoodText").GetComponent<Text>();
         }
 
         void LocateUnits()
@@ -121,6 +128,45 @@ namespace MyGame
 
             //Set doingSetup to false allowing player to move again.
             doingSetup = false;
+        }
+
+        public void UpdateFood(int delta)
+        {
+            playerFoodPoints += delta;
+            if (delta < 0)
+                CheckIfGameOver();
+
+            int notifyDelta = delta;
+            if (delta == -1)
+                notifyDelta = 0;
+
+            UpdateFoodText(notifyDelta);
+        }
+
+        //CheckIfGameOver checks if the player is out of food points and if so, ends the game.
+        private void CheckIfGameOver()
+        {
+            //Check if food point total is less than or equal to zero.
+            if (playerFoodPoints <= 0)
+            {
+                SoundManager.instance.PlaySingle(gameOverSound);
+                SoundManager.instance.musicSource.Stop();
+
+                //Call the GameOver function of GameManager.
+                GameOver();
+            }
+        }
+
+        private void UpdateFoodText(int delta = 0)
+        {
+            if (delta != 0)
+            {
+                foodText.text = delta.ToString() + " Food: " + playerFoodPoints;
+            }
+            else
+            {
+                foodText.text = "Food: " + playerFoodPoints;
+            }
         }
 
         private InputMovingDir DetectPlayerMovingDir()
