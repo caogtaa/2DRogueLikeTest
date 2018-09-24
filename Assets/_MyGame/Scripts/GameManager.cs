@@ -10,7 +10,7 @@ namespace MyGame
     public class GameManager : GTBaseMonoBehaviour
     {
         public float levelStartDelay = 2f;                      //Time to wait before starting level, in seconds.
-        public float restartLevelDelay = 1f;        //Delay time in seconds to restart level.
+        public float nextLevelDelay = 1f;        //Delay time in seconds to restart level.
 
         public float turnDelay = 0.1f;                          //Delay between each Player turn.
         public int playerFoodPoints = 100;                      //Starting value for Player food points.
@@ -24,6 +24,7 @@ namespace MyGame
 
         private Text levelText;                                 //Text to display current level number.
         private GameObject levelImage;                          //Image to block out level as levels are being set up, background for levelText.
+        private GameObject restartButton;
 
         public Text foodText;                       //UI Text to display current player food total.
 
@@ -98,6 +99,9 @@ namespace MyGame
             //Set the text of levelText to the string "Day" and append the current level number.
             levelText.text = "Day " + level;
 
+            restartButton = GameObject.Find("RestartButton");
+            restartButton.SetActive(false);
+
             //Set levelImage to active blocking player's view of the game board during setup.
             levelImage.SetActive(true);
 
@@ -136,14 +140,15 @@ namespace MyGame
         public void UpdateFood(int delta)
         {
             playerFoodPoints += delta;
-            if (delta < 0)
-                CheckIfGameOver();
-
             int notifyDelta = delta;
             if (delta == -1)
+                // normal moving cost, do not notify
                 notifyDelta = 0;
 
             UpdateFoodText(notifyDelta);
+
+            if (delta < 0)
+                CheckIfGameOver();
         }
 
         //CheckIfGameOver checks if the player is out of food points and if so, ends the game.
@@ -242,6 +247,12 @@ namespace MyGame
         {
             //Set levelText to display number of levels passed and game over message
             levelText.text = "After " + level + " days, you starved.";
+            restartButton.SetActive(true);
+
+            Button buttonComponent = restartButton.GetComponent<Button>();
+            buttonComponent.onClick.RemoveAllListeners();
+            buttonComponent.onClick.AddListener(delegate { Restart(); });
+
 
             //Enable black background image gameObject.
             levelImage.SetActive(true);
@@ -282,6 +293,19 @@ namespace MyGame
             enemiesMoving = false;
         }
 
+        public void Restart()
+        {
+            level = 0;
+            playerFoodPoints = 100;
+            enabled = true;
+            playersTurn = true; // todo: coupled
+            playerMoving = false;
+            enemiesMoving = false;
+
+            SoundManager.instance.musicSource.Play();
+            NextLevel();
+        }
+
         public void onPlayerEnterExit()
         {
             if (playerFoodPoints <= 0)
@@ -293,12 +317,12 @@ namespace MyGame
             // to disable input
             doingSetup = true;
 
-            //Invoke the Restart function to start the next level with a delay of restartLevelDelay (default 1 second).
-            Invoke("Restart", restartLevelDelay);
+            //Invoke the Restart function to start the next level with a delay (default 1 second).
+            Invoke("NextLevel", nextLevelDelay);
         }
 
         //Restart reloads the scene when called.
-        private void Restart()
+        private void NextLevel()
         {
             //Load the last scene loaded, in this case Main, the only scene in the game.
             SceneManager.LoadScene(0);
