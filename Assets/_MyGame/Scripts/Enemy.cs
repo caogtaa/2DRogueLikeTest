@@ -6,12 +6,14 @@ namespace MyGame
     //Enemy inherits from MovingObject, our base class for objects that can move, Player also inherits from this.
     public class Enemy : MovingObject
     {
+        const int skipMoveTurn = 1;
         public int playerDamage;                            //The amount of food points to subtract from the player when attacking.
 
 
         private Animator animator;                          //Variable of type Animator to store a reference to the enemy's Animator component.
         private Transform target;                           //Transform to attempt to move toward each turn.
-        private bool skipMove;                              //Boolean to determine whether or not enemy should skip a turn or move this turn.
+        // private bool skipMove;                              //Boolean to determine whether or not enemy should skip a turn or move this turn.
+        private int enemyTurn = 0;
 
         public AudioClip attackSound1;                //1 of 2 Audio clips to play when player moves.
         public AudioClip attackSound2;                //2 of 2 Audio clips to play when player moves.
@@ -37,21 +39,20 @@ namespace MyGame
 
         //Override the AttemptMove function of MovingObject to include functionality needed for Enemy to skip turns.
         //See comments in MovingObject for more on how base AttemptMove function works.
-        public override void AttemptMove<T>(int xDir, int yDir)
+        public override bool AttemptMoveWithCallback<T>(int xDir, int yDir, CallbackDelegate callback = null)
         {
             //Check if skipMove is true, if so set it to false and skip this turn.
-            if (skipMove)
+            if (enemyTurn++ < skipMoveTurn)
             {
-                skipMove = false;
-                return;
-
+                return false;
             }
 
             //Call the AttemptMove function from MovingObject.
-            base.AttemptMove<T>(xDir, yDir);
+            bool canMove = base.AttemptMoveWithCallback<T>(xDir, yDir, callback);
 
             //Now that Enemy has moved, set skipMove to true to skip next move.
-            skipMove = true;
+            enemyTurn = 0;
+            return canMove;
         }
 
 
@@ -75,7 +76,7 @@ namespace MyGame
                 xDir = target.position.x > transform.position.x ? 1 : -1;
 
             //Call the AttemptMove function and pass in the generic parameter Player, because Enemy is moving and expecting to potentially encounter a Player
-            AttemptMove<Player>(xDir, yDir);
+            AttemptMoveWithCallback<Player>(xDir, yDir, null);
         }
 
 
