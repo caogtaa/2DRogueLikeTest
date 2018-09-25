@@ -34,6 +34,7 @@ namespace MyGame
         private bool doingSetup = true;                         //Boolean to check if we're setting up board, prevent Player from moving during setup.
 
         public AudioClip gameOverSound;             //Audio clip to play when player dies.
+        public Slider healthBar;
 
         class InputMovingDir
         {
@@ -117,6 +118,7 @@ namespace MyGame
             LocateUnits();
 
             foodText = GameObject.Find("FoodText").GetComponent<Text>();
+            healthBar = GameObject.Find("HealthBar").GetComponent<Slider>();
             UpdateFoodText();
         }
 
@@ -175,6 +177,8 @@ namespace MyGame
             {
                 foodText.text = "Food: " + playerFoodPoints;
             }
+
+            healthBar.value = playerFoodPoints;
         }
 
         private InputMovingDir DetectPlayerMovingDir()
