@@ -8,6 +8,10 @@ namespace MyGame
     {
         public delegate void CallbackDelegate();
 
+        public delegate bool ActionDelegate();
+
+        public delegate void HitCallback<T>(T t);
+
         public IEnumerator CombineCoroutineWithCallback(IEnumerator routine, CallbackDelegate callback)
         {
             yield return StartCoroutine(routine);

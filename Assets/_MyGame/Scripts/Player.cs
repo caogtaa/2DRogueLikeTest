@@ -44,9 +44,7 @@ namespace MyGame
             // GameManager will trigger Player's move
         }
 
-        //AttemptMove overrides the AttemptMove function in the base class MovingObject
-        //AttemptMove takes a generic parameter T which for Player will be of the type Wall, it also takes integers for x and y direction to move in.
-        public override bool AttemptMoveWithCallback<T>(int xDir, int yDir, CallbackDelegate callback)
+        public bool MovePlayer(int xDir, int yDir)
         {
             if (xDir * this.transform.localScale.x < 0)
             {
@@ -59,29 +57,25 @@ namespace MyGame
             //Every time player moves, subtract from food points total.
             GameManager.instance.UpdateFood(-1);
 
-            //Call the AttemptMove method of the base class, passing in the component T (in this case Wall) and x and y direction to move.
-            bool canMove = base.AttemptMoveWithCallback<T>(xDir, yDir, callback);
-            if (canMove) {
+
+            HitCallback<Wall> hitTargetCB = (Wall wall) =>
+            {
+                wall.DamageWall(wallDamage);
+                //Set the attack trigger of the player's animation controller in order to play the player's attack animation.
+                animator.SetTrigger("Chop");
+            };
+
+            if (AttemptMoveToTargetT<Wall>(xDir, yDir, hitTargetCB))
+                return true;
+
+            // just move
+            RaycastHit2D hit;
+            bool canMove = Move(xDir, yDir, out hit);
+            if (canMove)
                 SoundManager.instance.RandomizeSfx(moveSound1, moveSound2);
-            }
 
             return canMove;
         }
-
-        //OnCantMove overrides the abstract function OnCantMove in MovingObject.
-        //It takes a generic parameter T which in the case of Player is a Wall which the player can attack and destroy.
-        protected override void OnCantMove<T>(T component)
-        {
-            //Set hitWall to equal the component passed in as a parameter.
-            Wall hitWall = component as Wall;
-
-            //Call the DamageWall function of the Wall we are hitting.
-            hitWall.DamageWall(wallDamage);
-
-            //Set the attack trigger of the player's animation controller in order to play the player's attack animation.
-            animator.SetTrigger("Chop");
-        }
-
 
         //OnTriggerEnter2D is sent when another object enters a trigger collider attached to this object (2D physics only).
         private void OnTriggerEnter2D(Collider2D other)

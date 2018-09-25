@@ -10,8 +10,8 @@ namespace MyGame
         public LayerMask blockingLayer;         //Layer on which collision will be checked.
 
 
-        private BoxCollider2D boxCollider;      //The BoxCollider2D component attached to this object.
-        private Rigidbody2D rb2D;               //The Rigidbody2D component attached to this object.
+        protected BoxCollider2D boxCollider;      //The BoxCollider2D component attached to this object.
+        protected Rigidbody2D rb2D;               //The Rigidbody2D component attached to this object.
         // private float inverseMoveTime;          //Used to make movement more efficient.
 
         protected bool isMoving = false;
@@ -27,43 +27,6 @@ namespace MyGame
 
             //By storing the reciprocal of the move time we can use it by multiplying instead of dividing, this is more efficient.
             // inverseMoveTime = 1f / moveTime;
-        }
-
-        protected bool MoveWithCallback(int xDir, int yDir, out RaycastHit2D hit, CallbackDelegate callback = null)
-        {
-            //Store start position to move from, based on objects current transform position.
-            Vector2 start = transform.position;
-
-            // Calculate end position based on the direction parameters passed in when calling Move.
-            Vector2 end = start + new Vector2(xDir, yDir);
-
-            //Disable the boxCollider so that linecast doesn't hit this object's own collider.
-            boxCollider.enabled = false;
-
-            //Cast a line from start point to end point checking collision on blockingLayer.
-            hit = Physics2D.Linecast(start, end, blockingLayer);
-
-            //Re-enable boxCollider after linecast
-            boxCollider.enabled = true;
-
-            //Check if anything was hit
-            if (hit.transform == null)
-            {
-                //If nothing was hit, start SmoothMovement co-routine passing in the Vector2 end as destination
-                if (callback != null)
-                    StartCoroutine(CombineCoroutineWithCallback(SmoothMovement(end), callback));
-                else
-                    StartCoroutine(SmoothMovement(end));
-
-                //Return true to say that Move was successful
-                return true;
-            }
-
-            //If something was hit, return false, Move was unsuccesful.
-            if (callback != null)
-                callback();
-
-            return false;
         }
 
         //Move returns true if it is able to move and false if not. 
@@ -116,8 +79,6 @@ namespace MyGame
                 //Find a new position proportionally closer to the end, based on the moveTime
                 //Vector3 newPostion = Vector3.MoveTowards(rb2D.position, end, inverseMoveTime * Time.deltaTime);
 
-                // todo: check how fast it is called
-
                 // gt: moveTime is the seconds cost to move distance 1 in game (distance between 2 adjacent grids)
                 Vector3 newPostion = Vector3.MoveTowards(rb2D.position, end, Time.deltaTime / moveTime);
 
@@ -134,38 +95,38 @@ namespace MyGame
             isMoving = false;
         }
 
-        //The virtual keyword means AttemptMove can be overridden by inheriting classes using the override keyword.
-        //AttemptMove takes a generic parameter T to specify the type of component we expect our unit to interact with if blocked (Player for Enemies, Wall for Player).
-        public virtual bool AttemptMoveWithCallback<T>(int xDir, int yDir, CallbackDelegate callback = null)
+        public bool AttemptMoveToTargetT<T>(int xDir, int yDir, HitCallback<T> hitCallback = null)
             where T : Component
         {
-            //Hit will store whatever our linecast hits when Move is called.
-            RaycastHit2D hit;
+            //Store start position to move from, based on objects current transform position.
+            Vector2 start = transform.position;
 
-            //Set canMove to true if Move was successful, false if failed.
-            bool canMove = MoveWithCallback(xDir, yDir, out hit, callback);
+            // Calculate end position based on the direction parameters passed in when calling Move.
+            Vector2 end = start + new Vector2(xDir, yDir);
 
-            //Check if nothing was hit by linecast
-            // gt: object is moving now
+            //Disable the boxCollider so that linecast doesn't hit this object's own collider.
+            boxCollider.enabled = false;
+
+            //Cast a line from start point to end point checking collision on blockingLayer.
+            RaycastHit2D hit = Physics2D.Linecast(start, end, blockingLayer);
+
+            //Re-enable boxCollider after linecast
+            boxCollider.enabled = true;
+
             if (hit.transform == null)
-                //If nothing was hit, return and don't execute further code.
-                return canMove;
+                // hit nothing
+                return false;
 
-            //Get a component reference to the component of type T attached to the object that was hit
             T hitComponent = hit.transform.GetComponent<T>();
+            if (hitComponent == null)
+                // hit something but not the expected object
+                return false;
 
-            //If canMove is false and hitComponent is not equal to null, meaning MovingObject is blocked and has hit something it can interact with.
-            if (!canMove && hitComponent != null)
+            // hit expected object
+            if (hitCallback != null)
+                hitCallback(hitComponent);
 
-                //Call the OnCantMove function and pass it hitComponent as a parameter.
-                OnCantMove(hitComponent);
-
-            return canMove;
+            return true;
         }
-
-        //The abstract modifier indicates that the thing being modified has a missing or incomplete implementation.
-        //OnCantMove will be overriden by functions in the inheriting classes.
-        protected abstract void OnCantMove<T>(T component)
-            where T : Component;
     }
 }

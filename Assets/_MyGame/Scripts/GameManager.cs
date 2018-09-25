@@ -210,11 +210,10 @@ namespace MyGame
                 InputMovingDir movingDir = DetectPlayerMovingDir();
                 if (!movingDir.isEmpty()) {
                     playerMoving = true;
-                    player.AttemptMoveWithCallback<Wall>(
-                        movingDir.horizontal,
-                        movingDir.vertical,() => {
+                    StartCoroutine(CombineCoroutineWithCallback(
+                        MovePlayer(movingDir), () => {
                             playerMoving = false;
-                        });
+                        }));
 
                     // enable enemies action immediately
                     playersTurn = false;
@@ -261,12 +260,15 @@ namespace MyGame
             enabled = false;
         }
 
+        IEnumerator MovePlayer(InputMovingDir moveDir)
+        {
+            player.MovePlayer(moveDir.horizontal, moveDir.vertical);
+            yield return null;
+        }
+
         //Coroutine to move enemies in sequence.
         IEnumerator MoveEnemies()
         {
-            //While enemiesMoving is true player is unable to move.
-            enemiesMoving = true;
-
             //Wait for turnDelay seconds, defaults to .1 (100 ms).
             yield return new WaitForSeconds(turnDelay);
 
@@ -286,11 +288,6 @@ namespace MyGame
                 //Wait for Enemy's moveTime before moving next Enemy, 
                 yield return new WaitForSeconds(enemies[i].moveTime);
             }
-            //Once Enemies are done moving, set playersTurn to true so player can move.
-            playersTurn = true;
-
-            //Enemies are done moving, set enemiesMoving to false.
-            enemiesMoving = false;
         }
 
         public void Restart()
