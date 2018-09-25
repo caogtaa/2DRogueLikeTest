@@ -21,6 +21,8 @@ namespace MyGame
         public AudioClip drinkSound1;               //1 of 2 Audio clips to play when player collects a soda object.
         public AudioClip drinkSound2;               //2 of 2 Audio clips to play when player collects a soda object.
 
+        public GameObject popupTextPrefab;
+
         //Start overrides the Start function of MovingObject
         protected override void Start()
         {
@@ -116,6 +118,9 @@ namespace MyGame
             //Set the trigger for the player animator to transition to the playerHit animation.
             animator.SetTrigger("Hit");
             GameManager.instance.UpdateFood(-loss);
+            GameObject popupText = Instantiate(popupTextPrefab);// , this.transform.position, Quaternion.identity);
+            GameObject canvas = GameObject.Find("Canvas");
+            popupText.transform.SetParent(canvas.transform);
         }
 
     }
