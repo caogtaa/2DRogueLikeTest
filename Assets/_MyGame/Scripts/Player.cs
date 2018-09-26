@@ -22,6 +22,7 @@ namespace MyGame
         public AudioClip drinkSound2;               //2 of 2 Audio clips to play when player collects a soda object.
 
         public GameObject popupTextPrefab;
+        public GameObject gainTextPrefab;
 
         //Start overrides the Start function of MovingObject
         protected override void Start()
@@ -57,8 +58,7 @@ namespace MyGame
             }
 
             //Every time player moves, subtract from food points total.
-            GameManager.instance.UpdateFood(-1);
-
+            UpdateFood(-1);
 
             HitCallback<Wall> hitTargetCB = (Wall wall) =>
             {
@@ -79,6 +79,41 @@ namespace MyGame
             return canMove;
         }
 
+        private void UpdateFood(int delta, GameObject objectToAction = null)
+        {
+            GameManager.instance.UpdateFood(delta);
+
+            if (delta < -1)
+            {
+                // pop up health loss
+                // todo: save canvas at very first
+                PopupText popupText = Instantiate(popupTextPrefab).GetComponent<PopupText>();
+                GameObject canvas = GameObject.Find("Canvas");
+
+                Vector2 screenPosition = Camera.main.WorldToScreenPoint(transform.position);
+
+                // todo: add radom to position
+                popupText.transform.SetParent(canvas.transform, false);
+                popupText.transform.position = screenPosition;
+                popupText.content.text = (-delta).ToString();
+            }
+            else if (delta > 0)
+            {
+                GainText text = Instantiate(gainTextPrefab).GetComponent<GainText>();
+                GameObject canvas = GameObject.Find("Canvas");
+
+                Vector2 screenPosition = Camera.main.WorldToScreenPoint(transform.position);
+                if (objectToAction != null) {
+                    screenPosition = Camera.main.WorldToScreenPoint(objectToAction.transform.position);
+                }
+
+                // todo: add radom to position
+                text.transform.SetParent(canvas.transform, false);
+                text.transform.position = screenPosition;
+                text.content.text = "+" + delta;
+            }
+        }
+
         //OnTriggerEnter2D is sent when another object enters a trigger collider attached to this object (2D physics only).
         private void OnTriggerEnter2D(Collider2D other)
         {
@@ -92,7 +127,7 @@ namespace MyGame
             else if (other.tag == "Food")
             {
                 //Add pointsPerFood to the players current food total.
-                GameManager.instance.UpdateFood(pointsPerFood);
+                UpdateFood(pointsPerFood, other.gameObject);
 
                 //Disable the food object the player collided with.
                 other.gameObject.SetActive(false);
@@ -103,7 +138,7 @@ namespace MyGame
             else if (other.tag == "Soda")
             {
                 //Add pointsPerSoda to players food points total
-                GameManager.instance.UpdateFood(pointsPerSoda);
+                UpdateFood(pointsPerFood, other.gameObject);
 
                 //Disable the soda object the player collided with.
                 other.gameObject.SetActive(false);
@@ -117,10 +152,7 @@ namespace MyGame
         {
             //Set the trigger for the player animator to transition to the playerHit animation.
             animator.SetTrigger("Hit");
-            GameManager.instance.UpdateFood(-loss);
-            GameObject popupText = Instantiate(popupTextPrefab);// , this.transform.position, Quaternion.identity);
-            GameObject canvas = GameObject.Find("Canvas");
-            popupText.transform.SetParent(canvas.transform);
+            UpdateFood(-loss);
         }
 
     }

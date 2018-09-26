@@ -71,11 +71,13 @@
     <Compile Include="Assets\_Complete-Game\Scripts\Wall.cs" />
     <Compile Include="Assets\_MyGame\Scripts\BoardManager.cs" />
     <Compile Include="Assets\_MyGame\Scripts\Enemy.cs" />
+    <Compile Include="Assets\_MyGame\Scripts\GainText.cs" />
     <Compile Include="Assets\_MyGame\Scripts\GameManager.cs" />
     <Compile Include="Assets\_MyGame\Scripts\GTBaseMonoBehaviour.cs" />
     <Compile Include="Assets\_MyGame\Scripts\Loader.cs" />
     <Compile Include="Assets\_MyGame\Scripts\MoveObject.cs" />
     <Compile Include="Assets\_MyGame\Scripts\Player.cs" />
+    <Compile Include="Assets\_MyGame\Scripts\PopupText.cs" />
     <Compile Include="Assets\_MyGame\Scripts\SoundManager.cs" />
     <Compile Include="Assets\_MyGame\Scripts\Wall.cs" />
     <Compile Include="Assets\TutorialInfo\Scripts\Readme.cs" />
