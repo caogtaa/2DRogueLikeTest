@@ -25,6 +25,7 @@ namespace MyGame
         private Text levelText;                                 //Text to display current level number.
         private GameObject levelImage;                          //Image to block out level as levels are being set up, background for levelText.
         private GameObject restartButton;
+        private GameObject hiScoreText;
 
         public Text foodText;                       //UI Text to display current player food total.
 
@@ -102,6 +103,9 @@ namespace MyGame
 
             restartButton = GameObject.Find("RestartButton");
             restartButton.SetActive(false);
+
+            hiScoreText = GameObject.Find("HighScoreText");
+            hiScoreText.SetActive(false);
 
             //Set levelImage to active blocking player's view of the game board during setup.
             levelImage.SetActive(true);
@@ -251,11 +255,17 @@ namespace MyGame
             //Set levelText to display number of levels passed and game over message
             levelText.text = "After " + level + " days, you starved.";
             restartButton.SetActive(true);
+            hiScoreText.SetActive(true);
+
+            // show leader board
+            // todo: user input his name
+            LeaderBoard leaderBoard = new LeaderBoard();
+            leaderBoard.RecordScore(level, "player 1");
+            hiScoreText.GetComponent<Text>().text = "HI Score: " + leaderBoard.BestScore().ToString();
 
             Button buttonComponent = restartButton.GetComponent<Button>();
             buttonComponent.onClick.RemoveAllListeners();
             buttonComponent.onClick.AddListener(delegate { Restart(); });
-
 
             //Enable black background image gameObject.
             levelImage.SetActive(true);
